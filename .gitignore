@@ -1,0 +1,9 @@
+.DS_Store
+*.xcodeproj
+xcuserdata/
+DerivedData/
+MarkdownPreview/Resources/katex.min.js
+MarkdownPreview/Resources/katex.min.css
+MarkdownPreview/Resources/auto-render.min.js
+MarkdownPreview/Resources/highlight.min.js
+MarkdownPreview/Resources/katex-fonts/
