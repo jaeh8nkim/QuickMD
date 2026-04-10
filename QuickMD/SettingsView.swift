@@ -31,6 +31,7 @@ struct SettingsView: View {
                 Picker("Default Action", selection: $defaultAction) {
                     Text("Always Render").tag("always")
                     Text("Render on Click").tag("click")
+                    Text("Remember Last").tag("remember")
                 }
             }
 

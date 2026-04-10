@@ -395,6 +395,14 @@ body {
     padding-bottom: 0;
 }
 
+/* Basic: pure black/white raw text */
+.theme-basic.color-light #raw,
+.theme-basic.color-system #raw { color: #000000; }
+.theme-basic.color-dark #raw { color: #ffffff; }
+@media (prefers-color-scheme: dark) {
+    .theme-basic.color-system #raw { color: #ffffff; }
+}
+
 /* Basic syntax highlighting — muted */
 .theme-basic .hljs { color: var(--text-color); background: var(--code-bg); }
 .theme-basic .hljs-comment, .theme-basic .hljs-quote { color: #999999; font-style: italic; }

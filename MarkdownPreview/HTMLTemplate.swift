@@ -54,9 +54,11 @@ enum HTMLTemplate {
           if(w.style.display==='none'){
             w.style.display='block';r.style.display='none';
             b.textContent='Render Markdown';
+            document.title='mode:raw';
           }else{
             w.style.display='none';r.style.display='block';
             b.textContent='Raw Markdown';
+            document.title='mode:rendered';
           }
         }
         </script>

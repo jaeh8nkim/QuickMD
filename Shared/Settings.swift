@@ -49,4 +49,25 @@ enum Settings {
     static var defaultAction: String {
         (read()["defaultAction"] as? String) ?? "always"
     }
+
+    private static let viewModeFileURL: URL = {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+        return dir.appendingPathComponent("com.quickmd.lastviewmode")
+    }()
+
+    static var lastViewMode: String {
+        (try? String(contentsOf: viewModeFileURL, encoding: .utf8)) ?? "rendered"
+    }
+
+    static func setLastViewMode(_ mode: String) {
+        try? mode.write(to: viewModeFileURL, atomically: true, encoding: .utf8)
+    }
+
+    static var startRendered: Bool {
+        switch defaultAction {
+        case "click": return false
+        case "remember": return lastViewMode == "rendered"
+        default: return true
+        }
+    }
 }

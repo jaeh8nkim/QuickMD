@@ -6,6 +6,7 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
 
     private var webView: WKWebView!
     private var completionHandler: ((Error?) -> Void)?
+    private var titleObservation: NSKeyValueObservation?
 
     override func loadView() {
         let config = WKWebViewConfiguration()
@@ -14,6 +15,14 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
         webView.navigationDelegate = self
         webView.autoresizingMask = [.width, .height]
         self.view = webView
+
+        titleObservation = webView.observe(\.title, options: .new) { _, change in
+            guard let title = change.newValue ?? nil else { return }
+            if title == "mode:raw" || title == "mode:rendered" {
+                let mode = String(title.dropFirst(5))
+                Settings.setLastViewMode(mode)
+            }
+        }
     }
 
     func preparePreviewOfFile(at url: URL, completionHandler handler: @escaping (Error?) -> Void) {
@@ -30,7 +39,7 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
                 fontSize: Settings.fontSize,
                 theme: Settings.theme,
                 colorScheme: Settings.colorScheme,
-                startRendered: Settings.defaultAction == "always"
+                startRendered: Settings.startRendered
             )
 
             self.completionHandler = handler
@@ -51,6 +60,14 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         completionHandler?(error)
         completionHandler = nil
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if navigationAction.navigationType == .linkActivated {
+            decisionHandler(.cancel)
+        } else {
+            decisionHandler(.allow)
+        }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
