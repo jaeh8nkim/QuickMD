@@ -99,7 +99,7 @@ enum HTMLTemplate {
         <article id="rendered" class="markdown-body" style="zoom:\(zoom);display:\(renderedDisplay)">
         \(rendered)
         </article>
-        <pre id="raw" style="zoom:\(zoom);display:\(rawDisplay)">\(escapedRaw)</pre>
+        <pre id="raw" style="display:\(rawDisplay)">\(escapedRaw)</pre>
         \(scripts)
         </body>
         </html>

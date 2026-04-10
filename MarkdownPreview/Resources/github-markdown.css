@@ -146,20 +146,31 @@ body {
     top: 12px;
     right: 12px;
     z-index: 100;
-    padding: 2px 8px;
-    font-size: 12px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
     font-weight: 500;
-    line-height: 20px;
+    line-height: 18px;
+    letter-spacing: 0.01em;
     cursor: pointer;
-    background-color: var(--bg-color);
-    color: var(--toggle-text);
-    border: 1px solid var(--toggle-border);
-    border-radius: 6px;
-    transition: background-color 0.15s;
+    color: var(--btn-text);
+    background-color: var(--btn-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 0.5px solid var(--btn-border);
+    border-radius: 14px;
+    box-shadow: 0 0.5px 2px rgba(0,0,0,0.08);
+    transition: background-color 0.15s, box-shadow 0.15s;
+    -webkit-user-select: none;
+    user-select: none;
 }
 #toggle-btn:hover {
-    background-color: var(--toggle-hover);
+    background-color: var(--btn-hover);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+#toggle-btn:active {
+    background-color: var(--btn-active);
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.1);
 }
 
 /* ============= Raw view ============= */
@@ -189,11 +200,11 @@ body {
     --blockquote-color: #656d76;
     --table-header-bg: #f6f8fa;
     --table-stripe-bg: #f6f8fa;
-    --toggle-border: #d1d9e0;
-    --toggle-text: #1f2328;
-    --toggle-hover: #f3f4f6;
-    --raw-bg: #f6f8fa;
-    --raw-text: #1f2328;
+    --btn-text: rgba(0,0,0,0.7);
+    --btn-bg: rgba(255,255,255,0.55);
+    --btn-border: rgba(0,0,0,0.12);
+    --btn-hover: rgba(255,255,255,0.75);
+    --btn-active: rgba(255,255,255,0.45);
 }
 
 /* GITHUB THEME — DARK */
@@ -207,11 +218,11 @@ body {
     --blockquote-color: #9198a1;
     --table-header-bg: #161b22;
     --table-stripe-bg: #161b22;
-    --toggle-border: #3d444d;
-    --toggle-text: #e6edf3;
-    --toggle-hover: #21262d;
-    --raw-bg: #161b22;
-    --raw-text: #e6edf3;
+    --btn-text: rgba(255,255,255,0.75);
+    --btn-bg: rgba(255,255,255,0.1);
+    --btn-border: rgba(255,255,255,0.12);
+    --btn-hover: rgba(255,255,255,0.16);
+    --btn-active: rgba(255,255,255,0.08);
 }
 
 /* GITHUB THEME — SYSTEM (auto light/dark) */
@@ -226,11 +237,11 @@ body {
     --blockquote-color: #656d76;
     --table-header-bg: #f6f8fa;
     --table-stripe-bg: #f6f8fa;
-    --toggle-border: #d1d9e0;
-    --toggle-text: #1f2328;
-    --toggle-hover: #f3f4f6;
-    --raw-bg: #f6f8fa;
-    --raw-text: #1f2328;
+    --btn-text: rgba(0,0,0,0.7);
+    --btn-bg: rgba(255,255,255,0.55);
+    --btn-border: rgba(0,0,0,0.12);
+    --btn-hover: rgba(255,255,255,0.75);
+    --btn-active: rgba(255,255,255,0.45);
 }
 @media (prefers-color-scheme: dark) {
     .theme-github.color-system {
@@ -242,11 +253,11 @@ body {
         --blockquote-color: #9198a1;
         --table-header-bg: #161b22;
         --table-stripe-bg: #161b22;
-        --toggle-border: #3d444d;
-        --toggle-text: #e6edf3;
-        --toggle-hover: #21262d;
-        --raw-bg: #161b22;
-        --raw-text: #e6edf3;
+        --btn-text: rgba(255,255,255,0.75);
+        --btn-bg: rgba(255,255,255,0.1);
+        --btn-border: rgba(255,255,255,0.12);
+        --btn-hover: rgba(255,255,255,0.16);
+        --btn-active: rgba(255,255,255,0.08);
     }
 }
 
@@ -316,11 +327,11 @@ body {
     --blockquote-color: #777777;
     --table-header-bg: #f5f5f5;
     --table-stripe-bg: #fafafa;
-    --toggle-border: #d0d0d0;
-    --toggle-text: #555555;
-    --toggle-hover: #eeeeee;
-    --raw-bg: #f0f0f0;
-    --raw-text: #333333;
+    --btn-text: rgba(0,0,0,0.6);
+    --btn-bg: rgba(255,255,255,0.55);
+    --btn-border: rgba(0,0,0,0.1);
+    --btn-hover: rgba(255,255,255,0.75);
+    --btn-active: rgba(255,255,255,0.45);
 }
 
 /* BASIC — DARK */
@@ -334,11 +345,11 @@ body {
     --blockquote-color: #888888;
     --table-header-bg: #252525;
     --table-stripe-bg: #212121;
-    --toggle-border: #444444;
-    --toggle-text: #aaaaaa;
-    --toggle-hover: #2a2a2a;
-    --raw-bg: #252525;
-    --raw-text: #c8c8c8;
+    --btn-text: rgba(255,255,255,0.65);
+    --btn-bg: rgba(255,255,255,0.08);
+    --btn-border: rgba(255,255,255,0.1);
+    --btn-hover: rgba(255,255,255,0.14);
+    --btn-active: rgba(255,255,255,0.06);
 }
 
 /* BASIC — SYSTEM (auto light/dark) */
@@ -353,11 +364,11 @@ body {
     --blockquote-color: #777777;
     --table-header-bg: #f5f5f5;
     --table-stripe-bg: #fafafa;
-    --toggle-border: #d0d0d0;
-    --toggle-text: #555555;
-    --toggle-hover: #eeeeee;
-    --raw-bg: #f0f0f0;
-    --raw-text: #333333;
+    --btn-text: rgba(0,0,0,0.6);
+    --btn-bg: rgba(255,255,255,0.55);
+    --btn-border: rgba(0,0,0,0.1);
+    --btn-hover: rgba(255,255,255,0.75);
+    --btn-active: rgba(255,255,255,0.45);
 }
 @media (prefers-color-scheme: dark) {
     .theme-basic.color-system {
@@ -369,11 +380,11 @@ body {
         --blockquote-color: #888888;
         --table-header-bg: #252525;
         --table-stripe-bg: #212121;
-        --toggle-border: #444444;
-        --toggle-text: #aaaaaa;
-        --toggle-hover: #2a2a2a;
-        --raw-bg: #252525;
-        --raw-text: #c8c8c8;
+        --btn-text: rgba(255,255,255,0.65);
+        --btn-bg: rgba(255,255,255,0.08);
+        --btn-border: rgba(255,255,255,0.1);
+        --btn-hover: rgba(255,255,255,0.14);
+        --btn-active: rgba(255,255,255,0.06);
     }
 }
 

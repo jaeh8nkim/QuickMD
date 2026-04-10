@@ -12,14 +12,14 @@ struct SettingsView: View {
         Form {
             Section("Preview") {
                 Picker("Font Size", selection: $fontSize) {
-                    ForEach([80, 90, 100, 110, 120, 130, 140], id: \.self) { size in
+                    ForEach(Array(stride(from: 50, through: 150, by: 10)), id: \.self) { size in
                         Text("\(size)%").tag(size)
                     }
                 }
 
                 Picker("Theme", selection: $theme) {
-                    Text("GitHub").tag("github")
                     Text("Basic").tag("basic")
+                    Text("GitHub").tag("github")
                 }
 
                 Picker("Color Scheme", selection: $colorScheme) {
