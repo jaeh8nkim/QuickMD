@@ -5,8 +5,9 @@ import WebKit
 class PreviewViewController: NSViewController, QLPreviewingController, WKNavigationDelegate {
 
     private var webView: WKWebView!
+    private var skeletonReady = false
+    private var pendingInject: String?
     private var completionHandler: ((Error?) -> Void)?
-    private var titleObservation: NSKeyValueObservation?
 
     override func loadView() {
         let config = WKWebViewConfiguration()
@@ -16,13 +17,8 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
         webView.autoresizingMask = [.width, .height]
         self.view = webView
 
-        titleObservation = webView.observe(\.title, options: .new) { _, change in
-            guard let title = change.newValue ?? nil else { return }
-            if title == "mode:raw" || title == "mode:rendered" {
-                let mode = String(title.dropFirst(5))
-                Settings.setLastViewMode(mode)
-            }
-        }
+        let baseURL = Bundle.main.resourceURL
+        webView.loadHTMLString(HTMLTemplate.skeleton(), baseURL: baseURL)
     }
 
     func preparePreviewOfFile(at url: URL, completionHandler handler: @escaping (Error?) -> Void) {
@@ -31,7 +27,7 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
             let result = MarkdownRenderer.render(markdown)
             let htmlWithImages = resolveLocalImages(in: result.html, relativeTo: url)
 
-            let fullHTML = HTMLTemplate.build(
+            let js = HTMLTemplate.injectCall(
                 raw: markdown,
                 rendered: htmlWithImages,
                 needsMath: result.needsMath,
@@ -39,13 +35,22 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
                 fontSize: Settings.fontSize,
                 theme: Settings.theme,
                 colorScheme: Settings.colorScheme,
-                startRendered: Settings.startRendered
+                startRendered: Settings.defaultAction != "click"
             )
 
-            self.completionHandler = handler
-            let baseURL = Bundle.main.resourceURL
-            webView.loadHTMLString(fullHTML, baseURL: baseURL)
+            if skeletonReady {
+                inject(js, handler: handler)
+            } else {
+                pendingInject = js
+                completionHandler = handler
+            }
         } catch {
+            handler(error)
+        }
+    }
+
+    private func inject(_ js: String, handler: @escaping (Error?) -> Void) {
+        webView.evaluateJavaScript(js) { _, error in
             handler(error)
         }
     }
@@ -53,8 +58,14 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
     // MARK: - WKNavigationDelegate
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        completionHandler?(nil)
-        completionHandler = nil
+        if !skeletonReady {
+            skeletonReady = true
+            if let js = pendingInject, let handler = completionHandler {
+                pendingInject = nil
+                completionHandler = nil
+                inject(js, handler: handler)
+            }
+        }
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -70,11 +81,6 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
         }
     }
 
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        completionHandler?(error)
-        completionHandler = nil
-    }
-
     // MARK: - Local image resolution
 
     private static let mimeTypes: [String: String] = [
@@ -88,9 +94,6 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
         "ico": "image/x-icon",
     ]
 
-    /// Finds `<img src="...">` tags with local (relative) paths, reads the image files,
-    /// and replaces the src with base64 data URIs. This works around the sandbox restriction
-    /// where the WebView's baseURL points to the bundle, not the markdown file's directory.
     private func resolveLocalImages(in html: String, relativeTo fileURL: URL) -> String {
         guard let regex = try? NSRegularExpression(
             pattern: #"<img\s[^>]*?src="([^"]+)"[^>]*?>"#
@@ -110,7 +113,6 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
             let fullMatch = ns.substring(with: match.range)
             let src = ns.substring(with: match.range(at: 1))
 
-            // Append text between previous match and this one
             output += ns.substring(with: NSRange(location: cursor, length: match.range.location - cursor))
 
             if src.hasPrefix("http://") || src.hasPrefix("https://") || src.hasPrefix("data:") || src.hasPrefix("//") {
@@ -124,7 +126,6 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
                     with: "src=\"\(dataURI)\""
                 )
             } else {
-                // Could not read image (sandbox or missing file) — keep original
                 output += fullMatch
             }
 

@@ -5,16 +5,11 @@ enum Settings {
     private static let extContainerID = "com.quickmd.app.markdownpreview"
     private static let fileName = "com.quickmd.settings.plist"
 
-    /// URL inside the extension's sandbox container.
-    /// - From the extension (sandboxed): NSHomeDirectory() → container/Data/
-    /// - From the host app (non-sandboxed): ~/Library/Containers/<id>/Data/
     static var fileURL: URL {
         let base: URL
         if Bundle.main.bundleIdentifier == extContainerID {
-            // Running inside the extension — use sandbox home
             base = URL(fileURLWithPath: NSHomeDirectory())
         } else {
-            // Running inside the host app (non-sandboxed)
             base = FileManager.default.homeDirectoryForCurrentUser
                 .appendingPathComponent("Library/Containers/\(extContainerID)/Data")
         }
@@ -48,26 +43,5 @@ enum Settings {
 
     static var defaultAction: String {
         (read()["defaultAction"] as? String) ?? "always"
-    }
-
-    private static let viewModeFileURL: URL = {
-        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
-        return dir.appendingPathComponent("com.quickmd.lastviewmode")
-    }()
-
-    static var lastViewMode: String {
-        (try? String(contentsOf: viewModeFileURL, encoding: .utf8)) ?? "rendered"
-    }
-
-    static func setLastViewMode(_ mode: String) {
-        try? mode.write(to: viewModeFileURL, atomically: true, encoding: .utf8)
-    }
-
-    static var startRendered: Bool {
-        switch defaultAction {
-        case "click": return false
-        case "remember": return lastViewMode == "rendered"
-        default: return true
-        }
     }
 }

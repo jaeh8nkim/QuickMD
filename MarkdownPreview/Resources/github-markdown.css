@@ -178,7 +178,7 @@ body {
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     font-size: 11px;
     line-height: 1.2;
-    padding: 6px 8px;
+    padding: 2px 8px;
     margin: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -338,7 +338,7 @@ body {
 
 .theme-basic.color-dark {
     --bg-color: #1c1c1c;
-    --text-color: #c8c8c8;
+    --text-color: #ffffff;
     --link-color: #8ab4e8;
     --border-color: #333333;
     --code-bg: #252525;
@@ -373,7 +373,7 @@ body {
 @media (prefers-color-scheme: dark) {
     .theme-basic.color-system {
         --bg-color: #1c1c1c;
-        --text-color: #c8c8c8;
+        --text-color: #ffffff;
         --link-color: #8ab4e8;
         --border-color: #333333;
         --code-bg: #252525;

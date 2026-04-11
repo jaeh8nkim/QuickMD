@@ -2,21 +2,96 @@ import Foundation
 
 enum HTMLTemplate {
 
-    /// CSS loaded once from the extension bundle and cached.
-    private static let css: String = {
-        guard let url = Bundle.main.url(forResource: "github-markdown", withExtension: "css"),
-              let content = try? String(contentsOf: url, encoding: .utf8) else {
-            return "/* github-markdown.css not found */"
-        }
+    private static func bundleString(_ name: String, _ ext: String) -> String? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: ext),
+              let content = try? String(contentsOf: url, encoding: .utf8) else { return nil }
         return content
+    }
+
+    private static let css: String = {
+        bundleString("github-markdown", "css") ?? "/* github-markdown.css not found */"
     }()
 
-    /// Builds the complete HTML document for the Quick Look preview.
-    ///
-    /// Both the rendered HTML and raw markdown are embedded in the document.
-    /// JavaScript toggles visibility between them. KaTeX and highlight.js
-    /// are only included when the document actually needs them.
-    static func build(
+    private static let katexCSS: String? = { bundleString("katex.min", "css") }()
+
+    /// Skeleton HTML loaded once during pre-warm. Contains CSS, KaTeX CSS,
+    /// and the toggle/inject JS. The body starts empty — content is injected
+    /// later via evaluateJavaScript calling injectContent().
+    static func skeleton() -> String {
+        var styles = "<style>\(css)</style>"
+        if let katexStyle = katexCSS {
+            styles += "\n<style>\(katexStyle)</style>"
+        }
+
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        \(styles)
+        </head>
+        <body>
+        <script>
+        function toggleView(){
+          var r=document.getElementById('rendered'),
+              w=document.getElementById('raw'),
+              b=document.getElementById('toggle-btn');
+          if(w.style.display==='none'){
+            w.style.display='block';r.style.display='none';
+            b.textContent='Render Markdown';
+          }else{
+            w.style.display='none';r.style.display='block';
+            b.textContent='Raw Markdown';
+          }
+        }
+
+        function injectContent(rendered, raw, zoom, startRendered, needsCode, needsMath) {
+          var renderedDisplay = startRendered ? 'block' : 'none';
+          var rawDisplay = startRendered ? 'none' : 'block';
+          var buttonText = startRendered ? 'Raw Markdown' : 'Render Markdown';
+
+          document.body.innerHTML =
+            '<button id="toggle-btn" onclick="toggleView()">' + buttonText + '</button>' +
+            '<article id="rendered" class="markdown-body" style="zoom:' + zoom + ';display:' + renderedDisplay + '">' + rendered + '</article>' +
+            '<pre id="raw" style="display:' + rawDisplay + '">' + raw + '</pre>';
+
+          if (needsCode) {
+            var s = document.createElement('script');
+            s.src = 'highlight.min.js';
+            s.onload = function(){ hljs.highlightAll(); };
+            document.head.appendChild(s);
+          }
+
+          if (needsMath) {
+            var k = document.createElement('script');
+            k.src = 'katex.min.js';
+            k.onload = function(){
+              var a = document.createElement('script');
+              a.src = 'auto-render.min.js';
+              a.onload = function(){
+                renderMathInElement(document.getElementById('rendered'), {
+                  delimiters: [
+                    {left:'$$', right:'$$', display:true},
+                    {left:'$', right:'$', display:false}
+                  ],
+                  throwOnError: false,
+                  strict: false
+                });
+              };
+              document.head.appendChild(a);
+            };
+            document.head.appendChild(k);
+          }
+        }
+        </script>
+        </body>
+        </html>
+        """
+    }
+
+    /// Builds a JS call that sets the theme classes and injects content.
+    static func injectCall(
         raw: String,
         rendered: String,
         needsMath: Bool,
@@ -29,90 +104,30 @@ enum HTMLTemplate {
         let zoom = String(format: "%.2f", Double(fontSize) / 100.0)
         let themeClass = (theme == "basic") ? "theme-basic" : "theme-github"
         let colorClass = "color-\(colorScheme)"
-        let escapedRaw = htmlEscape(raw)
 
-        let renderedDisplay = startRendered ? "block" : "none"
-        let rawDisplay = startRendered ? "none" : "block"
-        let buttonText = startRendered ? "Raw Markdown" : "Render Markdown"
-
-        var head = """
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>\(css)</style>
-        """
-
-        if needsMath {
-            head += "\n<link rel=\"stylesheet\" href=\"katex.min.css\">"
-        }
-
-        var scripts = """
-        <script>
-        function toggleView(){
-          var r=document.getElementById('rendered'),
-              w=document.getElementById('raw'),
-              b=document.getElementById('toggle-btn');
-          if(w.style.display==='none'){
-            w.style.display='block';r.style.display='none';
-            b.textContent='Render Markdown';
-            document.title='mode:raw';
-          }else{
-            w.style.display='none';r.style.display='block';
-            b.textContent='Raw Markdown';
-            document.title='mode:rendered';
-          }
-        }
-        </script>
-        """
-
-        if needsCode {
-            scripts += """
-
-            <script src="highlight.min.js"></script>
-            <script>hljs.highlightAll();</script>
-            """
-        }
-
-        if needsMath {
-            scripts += """
-
-            <script src="katex.min.js"></script>
-            <script src="auto-render.min.js"></script>
-            <script>
-            renderMathInElement(document.getElementById('rendered'),{
-              delimiters:[
-                {left:'$$',right:'$$',display:true},
-                {left:'$',right:'$',display:false}
-              ],
-              throwOnError:false,
-              strict:false
-            });
-            </script>
-            """
-        }
+        let escapedRendered = jsEscape(rendered)
+        let escapedRaw = jsEscape(htmlEscape(raw))
 
         return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-        \(head)
-        </head>
-        <body class="\(themeClass) \(colorClass)">
-        <button id="toggle-btn" onclick="toggleView()">\(buttonText)</button>
-        <article id="rendered" class="markdown-body" style="zoom:\(zoom);display:\(renderedDisplay)">
-        \(rendered)
-        </article>
-        <pre id="raw" style="display:\(rawDisplay)">\(escapedRaw)</pre>
-        \(scripts)
-        </body>
-        </html>
+        document.body.className = '\(themeClass) \(colorClass)';
+        injectContent('\(escapedRendered)', '\(escapedRaw)', '\(zoom)', \(startRendered), \(needsCode), \(needsMath));
         """
     }
 
-    private static func htmlEscape(_ string: String) -> String {
+    static func htmlEscape(_ string: String) -> String {
         string
             .replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")
+    }
+
+    private static func jsEscape(_ string: String) -> String {
+        string
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "</script>", with: "<\\/script>")
     }
 }
