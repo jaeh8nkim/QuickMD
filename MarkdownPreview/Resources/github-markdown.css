@@ -89,6 +89,13 @@
     margin: 0 0.35em 0 -1.4em;
     vertical-align: middle;
 }
+/* swift-markdown wraps the item text in <p>; render it inline so the checkbox
+   and text appear on the same line. Only the first paragraph is inlined so
+   multi-paragraph task items still get block layout for subsequent paragraphs. */
+.markdown-body .task-list-item > p:first-of-type {
+    display: inline;
+    margin: 0;
+}
 
 .markdown-body table {
     border-spacing: 0;

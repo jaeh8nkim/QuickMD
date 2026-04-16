@@ -22,8 +22,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.quickmd.app
         PRODUCT_NAME: QuickMD
-        MARKETING_VERSION: "1.1"
-        CURRENT_PROJECT_VERSION: "2"
+        MARKETING_VERSION: "1.2"
+        CURRENT_PROJECT_VERSION: "3"
         INFOPLIST_FILE: QuickMD/Info.plist
         CODE_SIGN_ENTITLEMENTS: QuickMD/QuickMD.entitlements
         SWIFT_VERSION: "5.9"

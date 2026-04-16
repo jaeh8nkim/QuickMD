@@ -111,7 +111,10 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
 
         for match in matches {
             let fullMatch = ns.substring(with: match.range)
-            let src = ns.substring(with: match.range(at: 1))
+            let escapedSrc = ns.substring(with: match.range(at: 1))
+            // The rendered HTML escapes &, <, >, " in src. Decode before doing a
+            // filesystem lookup so paths like "img/a&b.png" resolve correctly.
+            let src = MarkdownRenderer.decodeHTMLEntities(escapedSrc)
 
             output += ns.substring(with: NSRange(location: cursor, length: match.range.location - cursor))
 
@@ -122,7 +125,7 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
                 let mime = Self.mimeTypes[ext] ?? "image/png"
                 let dataURI = "data:\(mime);base64,\(data.base64EncodedString())"
                 output += fullMatch.replacingOccurrences(
-                    of: "src=\"\(src)\"",
+                    of: "src=\"\(escapedSrc)\"",
                     with: "src=\"\(dataURI)\""
                 )
             } else {

@@ -128,6 +128,9 @@ enum HTMLTemplate {
             .replacingOccurrences(of: "'", with: "\\'")
             .replacingOccurrences(of: "\n", with: "\\n")
             .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "\u{2028}", with: "\\u2028")
+            .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
+            .replacingOccurrences(of: "\u{0000}", with: "\\u0000")
             .replacingOccurrences(of: "</script>", with: "<\\/script>")
     }
 }
