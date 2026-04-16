@@ -14,14 +14,32 @@ enum HTMLTemplate {
 
     private static let katexCSS: String? = { bundleString("katex.min", "css") }()
 
-    /// Skeleton HTML loaded once during pre-warm. Contains CSS, KaTeX CSS,
-    /// and the toggle/inject JS. The body starts empty — content is injected
-    /// later via evaluateJavaScript calling injectContent().
+    /// Skeleton HTML loaded once during pre-warm in `loadView`. Contains CSS,
+    /// KaTeX CSS, the toggle/inject JS. The body starts with the user's
+    /// theme classes set so the first paint uses the correct background
+    /// color, avoiding a white flash in dark mode when Finder swaps preview
+    /// instances. Content is injected later via evaluateJavaScript calling
+    /// injectContent().
+    ///
+    /// Loaded with `baseURL = Bundle.main.resourceURL` so relative script
+    /// and font URLs resolve into the appex's Resources directory.
     static func skeleton() -> String {
         var styles = "<style>\(css)</style>"
         if let katexStyle = katexCSS {
             styles += "\n<style>\(katexStyle)</style>"
         }
+
+        // Preload the optional scripts up front so WebKit overlaps their
+        // fetch+parse with skeleton CSS parsing. When injectContent later
+        // appends <script src="..."> the bytes are already warm.
+        let preloads = """
+        <link rel="preload" href="highlight.min.js" as="script">
+        <link rel="preload" href="katex.min.js" as="script">
+        <link rel="preload" href="auto-render.min.js" as="script">
+        """
+
+        let themeClass = (Settings.theme == "basic") ? "theme-basic" : "theme-github"
+        let colorClass = "color-\(Settings.colorScheme)"
 
         return """
         <!DOCTYPE html>
@@ -29,9 +47,10 @@ enum HTMLTemplate {
         <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        \(preloads)
         \(styles)
         </head>
-        <body>
+        <body class="\(themeClass) \(colorClass)">
         <script>
         function toggleView(){
           var r=document.getElementById('rendered'),
@@ -76,7 +95,8 @@ enum HTMLTemplate {
                     {left:'$', right:'$', display:false}
                   ],
                   throwOnError: false,
-                  strict: false
+                  strict: false,
+                  ignoredTags: ['script','noscript','style','textarea','pre','code']
                 });
               };
               document.head.appendChild(a);
@@ -90,7 +110,8 @@ enum HTMLTemplate {
         """
     }
 
-    /// Builds a JS call that sets the theme classes and injects content.
+    /// Builds a JS call that sets the theme classes (in case Settings changed
+    /// between skeleton build and this preview) and injects content.
     static func injectCall(
         raw: String,
         rendered: String,

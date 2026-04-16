@@ -6,5 +6,17 @@
     <true/>
     <key>com.apple.security.network.client</key>
     <true/>
+    <!-- Temporary-exception entitlement granting the QuickLook extension
+         read-only access to files under the user's home directory. This is
+         needed because sandboxed QL extensions are given read access ONLY to
+         the specific file they're asked to preview, not to sibling files
+         (like images referenced by a markdown document). Without this, local
+         image rendering is impossible. Apple frowns on temporary-exception
+         entitlements for App Store distribution, but this project ships
+         outside the App Store. -->
+    <key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+    <array>
+        <string>/</string>
+    </array>
 </dict>
 </plist>

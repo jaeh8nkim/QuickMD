@@ -233,6 +233,11 @@ private struct SafeHTMLFormatter: MarkupWalker {
     /// The non-digit rule keeps `$x$`, `$f(x)$`, `$a+b$` working while
     /// rejecting currency like `$5 and $10` (content starts with a digit).
     /// `$5$` alone is intentionally rejected as ambiguous.
+    ///
+    /// Note: uses `String.range(of:options:.regularExpression)` directly;
+    /// benchmarking showed that explicit `NSRegularExpression` caching here
+    /// is a wash — Foundation already caches compiled patterns internally,
+    /// and the explicit version only adds NSRange conversion overhead.
     private static func looksLikeMath(_ s: String) -> Bool {
         // Fast path: no `$` at all.
         guard s.contains("$") else { return false }
